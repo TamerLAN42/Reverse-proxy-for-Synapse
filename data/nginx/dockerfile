@@ -1,0 +1,10 @@
+FROM nginx:alpine
+
+RUN apk add --no-cache fail2ban
+
+COPY jail.local /etc/fail2ban/jail.local
+COPY nginx-bad-methods.conf /etc/fail2ban/filter.d/nginx-bad-methods.conf
+COPY nginx-ddos.conf /etc/fail2ban/filter.d/nginx-ddos.conf
+COPY intruders.conf /etc/fail2ban/filter.d/intruders.conf
+
+CMD sh -c "fail2ban-server -x & nginx -g 'daemon off;'"

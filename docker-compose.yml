@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  nginx:
+    build: ./data/nginx
+    cap_add:
+      - NET_ADMIN
+    container_name: matrix-nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "80:80"
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./data/nginx/conf.d:/etc/nginx/conf.d
+      - ./data/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+      - ./data/nginx/access.log:/var/log/nginx/access_fail2ban.log
+      - ./data/nginx/jail.local:/etc/fail2ban/jail.local
+      - ./data/nginx/nginx-bad-methods.conf:/etc/fail2ban/filter.d/nginx-bad-methods.conf
+      - ./data/nginx/nginx-ddos.conf:/etc/fail2ban/filter.d/nginx-ddos.conf
+      - ./data/nginx/intruders.log:/var/log/nginx/intruders.log
+    depends_on:
+      - synapse
+    logging:
+     driver: "json-file"
+     options:
+      max-size: "10m"
+      max-file: "3"
+      compress: "true"
+
+  certbot:
+    image: certbot/certbot
+    container_name: matrix-certbot
+    restart: unless-stopped
+    environment:
+     - PUID=1000
+     - PGID=1000
+    expose:
+     - "80"
+    dns:
+     - "8.8.8.8"
+     - "1.1.1.1"
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --authenticator standalone; sleep 12h & wait $${!}; done;'"
+
+  synapse:
+    image: matrixdotorg/synapse:latest
+    container_name: matrix
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+    expose:
+      - "8008"
+    volumes:
+      - ./data/synapse:/data
+    environment:
+      - VIRTUAL_HOST=your-domain-here.com
