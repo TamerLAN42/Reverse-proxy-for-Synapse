@@ -16,7 +16,7 @@
 ## Как это использовать?
 Проще простого *(с третьей или четвёртой попытки)*. Для начала клонируем репозиторий:  
 ```bash
-git clone repo.com/blabla.git
+git clone https://github.com/TamerLAN42/Reverse-proxy-for-Synapse.git
 ```
 После нам необходимо ручками *(спасибо за это nginx, который не поддерживает переменные окружения)* заменить в конфигах `your-domain-here.com` на ваш реальный домен. В частности это нужно сделать в:
 `matrix.conf`, `cert.conf`, `docker-compose.yml`  
